@@ -9,11 +9,17 @@
 #include <pthread.h>
 
 #include "util.h"
+#include "data.h"
 /* boolean */
 #define TRUE 1
 #define FALSE 0
 #define SEC_IN_STATE 1
 #define STATE_CHANGE_PROB 10
+
+// definicje zalozen projektu
+#define TIMETRACE 100
+#define GUIDE 2
+#define SIZE 3
 
 #define ROOT 0
 
@@ -23,6 +29,7 @@ extern int size;
 extern int ackCount;
 extern int lamport;
 extern pthread_t threadKom;
+extern data global;
 
 
 
