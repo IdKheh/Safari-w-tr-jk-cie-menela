@@ -5,23 +5,24 @@
 void mainLoop()
 {
     srandom(rank);
-
+	changeState(state::RUN);
 	while(true){
 		auto* pkt = new packet_t();
 		switch (stan){
 			case state::RUN:
 				debug("Zyje");
-				if(std::rand()%1000 >=700) break; // po jakims losowym czasie...
-				
+				if(std::rand()%1000 >=300) break; // po jakims losowym czasie...
+				debug("Chce isc na wycieczke!");
 				pthread_mutex_lock(&lamportMut);
+				pkt->src = rank;
 				sendPacketBroadcast(pkt,messages::REQUEST,lamport++);
 				pthread_mutex_unlock(&lamportMut);
 
-				changeState(WAIT);
+				changeState(state::WAIT);
 				delete pkt;
 				break;
 			case state::WAIT:
-				debug("Chce isc na wycieczke!");
+				
 				global.lock();
 				if(global.kolejka.size()>SIZE && global.numberOfACK == size-1){		// jeśli wykryjemy przepełnienie to wysyłamy wektor z kolejką
 					for(int i=0;i<GUIDE;i++){

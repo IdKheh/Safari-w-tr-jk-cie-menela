@@ -17,7 +17,7 @@ void *startKomWatek(void *ptr)
     packet_t pakiet;
 
     while(true) {
-	    debug("czekam wiadomosc");
+	    debug("czekam na wiadomosc");
         MPI_Recv( &pakiet, 1, MPI_PAKIET_T, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
         pthread_mutex_lock( &lamportMut );
         lamport= std::max(lamport,pakiet.ts)+1;
@@ -54,12 +54,15 @@ void *startKomWatek(void *ptr)
                         global.lock();
                         global.addProcess(pakiet.ts, pakiet.src);
                         global.unlock();
+                        // for (const auto& p : global.kolejka) {
+                        //     std::cout << "ID: " << p.id << std::endl;
+                        // }
                         sendACK(pakiet);
                         break;
                     case messages::ACK:
-                        debug("Dostałem ACK od %d, mam już %d", status.MPI_SOURCE, 0);
                         global.lock();
                         global.numberOfACK++;
+                        debug("Dostałem ACK od %d, mam już %d", status.MPI_SOURCE, global.numberOfACK);
                         global.unlock();
                         break;
                     case messages::END:
