@@ -25,7 +25,8 @@ void data::addProcess(int ts, int id){
     kolejka.emplace_back(ts,id);
 }
 data::data(){
-    przewodnicy = std::vector<int>(GUIDE,SIZE);
+    //przewodnicy = std::vector<int>(GUIDE,SIZE);
+    przewodnicy = GUIDE;
     numberOfACK = 0;
 }
 /* 

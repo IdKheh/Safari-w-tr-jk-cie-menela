@@ -9,7 +9,7 @@ struct proces{
 struct data{
     std::vector<proces> kolejka; //id zgloszonych procesow
     std::vector<int> usunKolejka; //usuwa G procesow
-    std::vector<int> przewodnicy;
+    int przewodnicy;
     void lock();
     void unlock();
     void addProcess(int ts, int id);

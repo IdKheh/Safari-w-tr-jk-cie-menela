@@ -17,7 +17,7 @@
 #define STATE_CHANGE_PROB 10
 
 // definicje zalozen projektu
-#define TIMETRACE 100
+#define TIMETRACE 3
 #define GUIDE 2
 #define SIZE 3
 

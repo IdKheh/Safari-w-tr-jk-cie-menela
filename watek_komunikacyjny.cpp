@@ -17,37 +17,22 @@ void *startKomWatek(void *ptr)
     packet_t pakiet;
 
     while(true) {
-	    debug("czekam na wiadomosc");
         MPI_Recv( &pakiet, 1, MPI_PAKIET_T, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
         pthread_mutex_lock( &lamportMut );
         lamport= std::max(lamport,pakiet.ts)+1;
         pthread_mutex_unlock( &lamportMut );
 
-        switch(stan){  // trzeba zaimplementować działanie w poszczególnych stanach
-            case state::RUN:
                 switch (status.MPI_TAG) {
                     case messages::START:
-                    case messages::END:
-                    case messages::ACK:
-                        debug("Cos poszlo nie tak");
-                        break;
-                    case messages::REQUEST:
                         global.lock();
-                        global.addProcess(pakiet.ts, pakiet.src);
-                        global.unlock();
-                        sendACK(pakiet);
-                        break;
-                    default:
-                        debug("Nie powinno być takiego typu kominikatu (??)");
-                        break;
-                }
-                break;
-            case state::WAIT:
-                switch (status.MPI_TAG) {
-                    case messages::START:
-                        debug("sekcja krytyczna run!")
-                        global.lock();
-                        global.numberOfACK = 0;
+                        // potwierdzenie wycieczki - powinien być jeszcze warunek bycia na czele kolejki na razie idzie każdy kto dostał ACK
+                        if (global.numberOfACK == size-1) {
+                            changeState(state::TRACE);
+                            global.numberOfACK = 0;
+                        }
+                        else {
+                            if (stan == state::WAIT) debug("nie dostałem od wszystkich ACK, nie idę :(");
+                        }
                         global.unlock();
                         break;
                     case messages::REQUEST:
@@ -72,46 +57,8 @@ void *startKomWatek(void *ptr)
                         debug("Nie powinno być takiego typu kominikatu (??)");
                         break;
                 }
-                break;
-            case state::TRACE:
-                switch ( status.MPI_TAG ) {
-                    case messages::START:
-                    case messages::ACK:
-                        debug("cos jest nie tak")
-                        break;
-                    case messages::REQUEST:
-                        global.lock();
-                        global.addProcess(pakiet.ts, pakiet.src);
-                        global.unlock();
-                        sendACK(pakiet);
-                        break;
-                    case messages::END:
-                        // TODO usuwanie danych z wektora
-                        break;
-                    default:
-                        debug("Nie powinno być takiego typu kominikatu (??)");
-                        break;
-                }
-                break;
-            case state::HOSPITAL:
-                switch ( status.MPI_TAG ) {
-                    case messages::START:
-                    case messages::ACK:
-                    case messages::END:
-                        debug("cos jest nie tak")
-                        break;
-                    case messages::REQUEST:
-                        global.lock();
-                        global.addProcess(pakiet.ts, pakiet.src);
-                        global.unlock();
-                        sendACK(pakiet);
-                        break;
-                    default:
-                        debug("Nie powinno być takiego typu kominikatu (??)");
-                        break;
-                }
-                break;
+                
 
-        }
+        
     }
 }

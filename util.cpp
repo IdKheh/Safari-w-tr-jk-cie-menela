@@ -11,10 +11,10 @@ pthread_mutex_t globalMutex = PTHREAD_MUTEX_INITIALIZER;
 struct tagNames_t{
     const char *name;
     int tag;
-} tagNames[] = {{"start procesu", messages::START },
-                {"prośbę o sekcję krytyczną", messages::REQUEST},
-                {"potwierdzenie", messages::ACK},
-                {"koniec wycieczki", messages::END}};
+} tagNames[] = {{"start wycieczki [START]", messages::START },
+                {"prośbę o sekcję krytyczną [REQUEST]", messages::REQUEST},
+                {"potwierdzenie [ACK]", messages::ACK},
+                {"koniec wycieczki [END]", messages::END}};
 
 const char *const tag2string( int tag )
 {
