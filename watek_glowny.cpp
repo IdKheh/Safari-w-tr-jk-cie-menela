@@ -16,9 +16,18 @@ void mainLoop()
 		if(global.kolejka.size() >= SIZE && global.przewodnicy > 0){
 			debug("Kolejka ma rozmiar: %d. Wysyłam START. Ilość wolnych przewodników: %d", global.kolejka.size(), global.przewodnicy);
 			pthread_mutex_lock(&lamportMut);
-			sendPacketBroadcast(pkt,messages::START,lamport++);
-			// czyszczenie całej kolejki, powinno tylko 3 pierwsze
-			global.kolejka.clear();
+			// inicjalizacja tablicy
+			int values[ARRAYSIZE];
+			for (int i = 0; i < ARRAYSIZE; ++i) {
+        		values[i] = -1;
+   		    }
+			// przepisanie danych z kolejki
+			for (size_t i = 0; i < global.kolejka.size(); i++) {
+				values[i] = global.kolejka[i].id;
+			}
+			sendPacketBroadcast(pkt,messages::START,lamport++,values);
+			// czyszczenie pierwszych elementów
+			global.kolejka.erase(global.kolejka.begin(), global.kolejka.begin() + SIZE);
 			global.przewodnicy -= 1;
 			pthread_mutex_unlock(&lamportMut);
 		}
@@ -27,8 +36,7 @@ void mainLoop()
 		switch (stan){
 			case state::RUN:
 				debug("Zyje");
-				//debug("Kolejka ma rozmiar: %d.", global.kolejka.size());
-				if(distribution(generator) > 80) {
+				if(distribution(generator) > 40) {
 					sleep(2);
 					break; // po jakims losowym czasie...
 				}
@@ -39,10 +47,8 @@ void mainLoop()
 				global.unlock();
 				// prośba do reszty
 				pthread_mutex_lock(&lamportMut);
-				sendPacketBroadcast(pkt,messages::REQUEST,lamport++);
+				sendPacketBroadcast(pkt,messages::REQUEST,lamport++,nullptr);
 				pthread_mutex_unlock(&lamportMut);
-
-
 				changeState(state::WAIT);
 				delete pkt;
 				break;
@@ -50,16 +56,12 @@ void mainLoop()
 				// czekaj na wycieczkę
 				break;
 			case state::TRACE:
-				debug("Idziemy na wycieczke, bierzemy misia w teczke...");
 				sleep(TIMETRACE); //jestesmy na wycieczce i nas nie ma :(
-
 				pthread_mutex_lock(&lamportMut);
-				sendPacketBroadcast(pkt,messages::END,lamport++);
+				sendPacketBroadcast(pkt,messages::END,lamport++,nullptr);
 				pthread_mutex_unlock(&lamportMut);
 
-				// TODO: Usuwanie wektora kolejki i wysłanie takiego wektora
-
-				if(distribution(generator) > 15) changeState(state::HOSPITAL);
+				if(distribution(generator) > 50) changeState(state::HOSPITAL);
 				else changeState(state::RUN);
 				break;
 			case state::HOSPITAL:
@@ -72,5 +74,4 @@ void mainLoop()
 				break;
 		}
 	}
-	//sleep(SEC_IN_STATE);
 }

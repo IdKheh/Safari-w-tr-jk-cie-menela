@@ -1,6 +1,7 @@
 #ifndef UTILH
 #define UTILH
 #include "main.h"
+#define ARRAYSIZE 8
 
 /* typ pakietu */
 typedef struct {
@@ -8,9 +9,10 @@ typedef struct {
     int src;  
 
     int data;     /* przykładowe pole z danymi; można zmienić nazwę na bardziej pasującą */
+    int dataArray[ARRAYSIZE];
 } packet_t;
 /* packet_t ma trzy pola, więc NITEMS=3. Wykorzystane w inicjuj_typ_pakietu */
-#define NITEMS 3
+#define NITEMS 4
 
 /* Typy wiadomości - TYPY PAKIETÓW  */
 enum messages{
@@ -25,7 +27,7 @@ void initTypePacket();
 
 /* wysyłanie pakietu, skrót: wskaźnik do pakietu (0 oznacza stwórz pusty pakiet), do kogo, z jakim typem */
 void sendPacket(packet_t *pkt, int destination, int tag);
-void sendPacketBroadcast(packet_t *pkt, int tag, int ts);
+void sendPacketBroadcast(packet_t *pkt, int tag, int ts, int *array);
 
 enum state{
     RUN, //proces jest uruchomiony

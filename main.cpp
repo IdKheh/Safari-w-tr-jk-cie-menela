@@ -28,6 +28,7 @@ data::data(){
     //przewodnicy = std::vector<int>(GUIDE,SIZE);
     przewodnicy = GUIDE;
     numberOfACK = 0;
+    numberOfEnd = 0;
 }
 /* 
  * Każdy proces ma dwa wątki - główny i komunikacyjny

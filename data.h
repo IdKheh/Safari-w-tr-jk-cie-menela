@@ -16,4 +16,5 @@ struct data{
     data();
 
     int numberOfACK;
+    int numberOfEnd;
 };

@@ -21,44 +21,60 @@ void *startKomWatek(void *ptr)
         pthread_mutex_lock( &lamportMut );
         lamport= std::max(lamport,pakiet.ts)+1;
         pthread_mutex_unlock( &lamportMut );
+        bool going = false;
 
-                switch (status.MPI_TAG) {
-                    case messages::START:
-                        global.lock();
-                        // potwierdzenie wycieczki - powinien być jeszcze warunek bycia na czele kolejki na razie idzie każdy kto dostał ACK
-                        if (global.numberOfACK == size-1) {
-                            changeState(state::TRACE);
-                            global.numberOfACK = 0;
+        switch (status.MPI_TAG) {
+            case messages::START:
+                global.lock();
+                // for(int i=0; i<ARRAYSIZE; i++){
+                //     debug("Nr w kolejce:%d, proces:%d", i, pakiet.dataArray[i]);
+                // }
+                for(int i=0; i<SIZE; i++){
+                    if (pakiet.dataArray[i] == rank) {
+                        going = true;
+                    }
+                    for(int j=0; j<global.kolejka.size(); j++) {
+                        if (pakiet.dataArray[i] == global.kolejka[j].id) {
+                            global.kolejka.erase(global.kolejka.begin() + j);
                         }
-                        else {
-                            if (stan == state::WAIT) debug("nie dostałem od wszystkich ACK, nie idę :(");
-                        }
-                        global.unlock();
-                        break;
-                    case messages::REQUEST:
-                        global.lock();
-                        global.addProcess(pakiet.ts, pakiet.src);
-                        global.unlock();
-                        // for (const auto& p : global.kolejka) {
-                        //     std::cout << "ID: " << p.id << std::endl;
-                        // }
-                        sendACK(pakiet);
-                        break;
-                    case messages::ACK:
-                        global.lock();
-                        global.numberOfACK++;
-                        debug("Dostałem ACK od %d, mam już %d", status.MPI_SOURCE, global.numberOfACK);
-                        global.unlock();
-                        break;
-                    case messages::END:
-                        debug("Cos poszlo nie tak");
-                        break;
-                    default:
-                        debug("Nie powinno być takiego typu kominikatu (??)");
-                        break;
+                    }
                 }
-                
-
-        
+                // potwierdzenie wyjścia na wycieczkę
+                if (global.numberOfACK == size-1) {
+                    if (going) {
+                        global.numberOfACK = 0;
+                        global.przewodnicy -= 1;
+                        debug("Idziemy na wycieczke, bierzemy misia w teczke...");
+                        changeState(state::TRACE);
+                    }
+                }
+                global.unlock();
+                break;
+            case messages::REQUEST:
+                global.lock();
+                global.addProcess(pakiet.ts, pakiet.src);
+                global.unlock();
+                sendACK(pakiet);
+                break;
+            case messages::ACK:
+                global.lock();
+                global.numberOfACK++;
+                // debug("Dostałem ACK od %d, mam już %d", status.MPI_SOURCE, global.numberOfACK);
+                global.unlock();
+                break;
+            case messages::END:
+                global.lock();
+                global.numberOfEnd++;
+                // debug("Dostałem END od %d, mam już %d", status.MPI_SOURCE, global.numberOfEnd);
+                if (global.numberOfEnd == SIZE) {
+                    global.numberOfEnd = 0;
+                    global.przewodnicy += 1;
+                }
+                global.unlock();
+                break;
+            default:
+                debug("Nie powinno być takiego typu komunikatu (??)");
+                break;
+        }
     }
 }

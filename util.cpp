@@ -27,12 +27,13 @@ const char *const tag2string( int tag )
 /* tworzy typ MPI_PAKIET_T  analogia do MPI_Send(&typ, sizeof(pakiet_t), MPI_BYTE ...) */
 void initTypePacket()
 {
-    int blocklengths[NITEMS] = {1,1,1};
-    MPI_Datatype typy[NITEMS] = {MPI_INT, MPI_INT, MPI_INT};
+    int blocklengths[NITEMS] = {1,1,1,ARRAYSIZE};
+    MPI_Datatype typy[NITEMS] = {MPI_INT, MPI_INT, MPI_INT, MPI_INT};
     MPI_Aint     offsets[NITEMS]; 
     offsets[0] = offsetof(packet_t, ts);
     offsets[1] = offsetof(packet_t, src);
     offsets[2] = offsetof(packet_t, data);
+    offsets[3] = offsetof(packet_t, dataArray);
 
     MPI_Type_create_struct(NITEMS, blocklengths, offsets, typy, &MPI_PAKIET_T);
     MPI_Type_commit(&MPI_PAKIET_T);
@@ -51,12 +52,12 @@ void sendPacket(packet_t *pkt, int destination, int tag)
     pkt->ts = ++lamport;
     pthread_mutex_unlock( &lamportMut );
     MPI_Send( pkt, 1, MPI_PAKIET_T, destination, tag, MPI_COMM_WORLD);
-    debug("Wysyłam %s do %d\n", tag2string( tag), destination);
+    //debug("Wysyłam %s do %d\n", tag2string( tag), destination);
     if (freepkt) free(pkt);
 
 }
 
-void sendPacketBroadcast(packet_t *pkt, int tag, int ts)
+void sendPacketBroadcast(packet_t *pkt, int tag, int ts, int *array)
 {
     int freepkt=0;
     if (pkt==nullptr) { 
@@ -65,12 +66,17 @@ void sendPacketBroadcast(packet_t *pkt, int tag, int ts)
     }
     pkt->src = rank;
     pkt->ts = ts;
+    if (array != nullptr) {
+        memcpy(pkt->dataArray, array, sizeof(int) * ARRAYSIZE);
+    } else {
+        memset(pkt->dataArray, 0, sizeof(int) * ARRAYSIZE);
+    }
 
     for (int i = 0; i < size; i++){
         if (i == rank) continue; // nie wysyłamy sami do siebie
         
         MPI_Send( pkt, 1, MPI_PAKIET_T, i, tag, MPI_COMM_WORLD);
-        debug("Wysyłam %s do %d\n", tag2string(tag), i);
+        //debug("Wysyłam %s do %d\n", tag2string(tag), i);
     }
     if (freepkt) free(pkt);
 }
