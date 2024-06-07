@@ -13,7 +13,7 @@ void mainLoop()
 		auto* pkt = new packet_t();
 		global.lock();
 		
-		if(global.kolejka.size() >= SIZE && global.przewodnicy > 0){
+		if(global.kolejka.size() >= SIZE && global.przewodnicy > 0 && global.numberOfACK == size-1){
 			debug("Kolejka ma rozmiar: %d. Wysyłam START. Ilość wolnych przewodników: %d", global.kolejka.size(), global.przewodnicy);
 			pthread_mutex_lock(&lamportMut);
 			// inicjalizacja tablicy
@@ -25,7 +25,20 @@ void mainLoop()
 			for (size_t i = 0; i < global.kolejka.size(); i++) {
 				values[i] = global.kolejka[i].id;
 			}
+			for(int i=0; i<ARRAYSIZE; i++){
+                debug("Nr w kolejce:%d, proces:%d", i, values[i]);
+            }
 			sendPacketBroadcast(pkt,messages::START,lamport++,values);
+			// sprawdz czy sam nie idziesz bo do siebie nie wysyłamy START
+			for (size_t i = 0; i < SIZE; i++) {
+				if (global.kolejka[i].id == rank && global.numberOfACK == size-1) {
+					global.przewodnicy -= 1;
+					global.numberOfACK = 0;
+					global.going = false;
+					debug("Idziemy na wycieczke, bierzemy misia w teczke...");
+					changeState(state::TRACE);
+				}
+			}
 			// czyszczenie pierwszych elementów
 			global.kolejka.erase(global.kolejka.begin(), global.kolejka.begin() + SIZE);
 			global.przewodnicy -= 1;

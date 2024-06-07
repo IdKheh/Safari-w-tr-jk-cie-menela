@@ -29,6 +29,7 @@ data::data(){
     przewodnicy = GUIDE;
     numberOfACK = 0;
     numberOfEnd = 0;
+    going = false;
 }
 /* 
  * Każdy proces ma dwa wątki - główny i komunikacyjny

@@ -17,4 +17,5 @@ struct data{
 
     int numberOfACK;
     int numberOfEnd;
+    bool going; //czy idzie na wycieczke
 };

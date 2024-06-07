@@ -21,7 +21,6 @@ void *startKomWatek(void *ptr)
         pthread_mutex_lock( &lamportMut );
         lamport= std::max(lamport,pakiet.ts)+1;
         pthread_mutex_unlock( &lamportMut );
-        bool going = false;
 
         switch (status.MPI_TAG) {
             case messages::START:
@@ -29,9 +28,10 @@ void *startKomWatek(void *ptr)
                 // for(int i=0; i<ARRAYSIZE; i++){
                 //     debug("Nr w kolejce:%d, proces:%d", i, pakiet.dataArray[i]);
                 // }
+                global.przewodnicy -= 1;
                 for(int i=0; i<SIZE; i++){
                     if (pakiet.dataArray[i] == rank) {
-                        going = true;
+                        global.going = true;
                     }
                     for(int j=0; j<global.kolejka.size(); j++) {
                         if (pakiet.dataArray[i] == global.kolejka[j].id) {
@@ -41,11 +41,14 @@ void *startKomWatek(void *ptr)
                 }
                 // potwierdzenie wyjścia na wycieczkę
                 if (global.numberOfACK == size-1) {
-                    if (going) {
+                    if (global.going) {
                         global.numberOfACK = 0;
-                        global.przewodnicy -= 1;
+                        global.going = false;
                         debug("Idziemy na wycieczke, bierzemy misia w teczke...");
                         changeState(state::TRACE);
+                    }
+                    else {
+                        debug("Nie jestem na początku kolejki, nie idę jeszcze");
                     }
                 }
                 global.unlock();
